@@ -4,27 +4,56 @@ author: 'Data Migrators Pty Ltd'
 description: 'Runs mcix system version'
 
 inputs:
+
+  api-key:
+    description: 'API key for authentication'
+    required: true
+
+  url:
+    description: 'URL of the DataStage server'
+    required: true
+
+  user:
+    description: 'Username for authentication'
+    required: true
+
+  report:
+    description: 'Path to output the compile report'
+    required: true
+    default: "./compile-report.xml"
+
+  project:
+    description: 'DataStage project name'
+    required: false     # Required when -project-id not specified
+    default: ""
+
+  project-id:
+    description: 'DataStage project id'
+    required: false     # Required when -project not specified
+    default: ""
+
   rules:
     description: 'Path to the compliance rules'
-    required: false
+    required: true
     default: /app/rules
-  path:
-    description: 'Path to the DataStage assets to analyze'
+
+  included-tags:
+    description: 'Comma-separated list of tags to include'
     required: false
-    default: /app/datastage
-  report:
-    description: 'JUnit report file path'
+    default: ""
+  
+  excluded-tags:
+    description: 'Comma-separated list of tags to exclude'
     required: false
-    default: /app/asset_analysis_report.xml
+    default: ""
+
   test-suite:
     description: 'Test suite name'
     required: false
     default: 'mcix tests'
+
   ignore-test-failures:
     description: 'Ignore test failures (always return 0)'
-    required: false
-  include-job-in-test-name:
-    description: 'Include job name in test name'
     required: false
 
 outputs:
@@ -35,12 +64,17 @@ runs:
   using: 'docker'
   image: 'Dockerfile' # Refers to the Dockerfile in the current directory
   args:
-    - ${{ inputs.rules }}
-    - ${{ inputs.path }}
+    - ${{ inputs.api-key }}
+    - ${{ inputs.url }}" 
+    - ${{ inputs.user }}
     - ${{ inputs.report }}
-    - ${{ inputs.test-suite }}
+    - ${{ inputs.project }}
+    - ${{ inputs.project-id }}
+    - ${{ inputs.rules }}
+    - ${{ inputs.included-tags }}
+    - ${{ inputs.excluded-tags }}
+    - ${{ inputs.test-suite }}"
     - ${{ inputs.ignore-test-failures }}
-    - ${{ inputs.include-job-in-test-name }}
 
 branding:
   icon: 'search'

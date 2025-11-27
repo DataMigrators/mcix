@@ -1,15 +1,53 @@
 #!/bin/sh -l
+set -eu
 
-# Will build command of the form:
-# mcix asset-analysis test \
-#   -assets ./Jobs \
-#   -exclude-tag tag-to-exclude \
-#   -include-tag tag-to-include \
-#   -queries ./Queries \
-#   -report compliance.csv \
-#   -threads 4
+MCIX_BIN_DIR="/usr/share/mcix/bin"
+MCIX_CMD="$MCIX_BIN_DIR/mcix"
+PATH="$PATH:$MCIX_BIN_DIR"
 
-echo "The action mcix/asset-analysis/test is not yet implemented." >> $GITHUB_OUTPUT
+# Validate required vars
+: "${PARAM_API_KEY:?Missing required input: api-key}"
+: "${PARAM_URL:?Missing required input: url}"
+: "${PARAM_USER:?Missing required input: user}"
+: "${PARAM_REPORT:?Missing required input: report}"
 
-status=1
+# Optional arguments
+PROJECT="${PARAM_PROJECT:-}"
+PROJECT_ID="${PARAM_PROJECT_ID:-}"
+
+# Failure handling utility function
+die() { echo "$*" 1>&2 ; exit 1; }
+
+# 1) Fail if BOTH project and project-id were provided
+if [ -n "$PROJECT" ] && [ -n "$PROJECT_ID" ]; then
+  die "ERROR: Both 'project' and 'project-id' were provided. Please specify only one."
+fi
+
+# 2) Fail if NEITHER project or project-id were provided
+if [ -z "$PROJECT" ] && [ -z "$PROJECT_ID" ]; then
+  die "ERROR: You must provide either 'project' or 'project-id'." 
+fi
+
+# Build command to execute
+CMD="$MCIX_CMD asset-analysis test \
+ -api-key \"$PARAM_API_KEY\" \
+ -url \"$PARAM_URL\" \
+ -user \"$PARAM_USER\" \
+ -report \"$PARAM_REPORT\""
+
+# Add optional argument flags
+#[ -n "$PARAM_INCLUDE_ASSET_IN_TEST_NAME" ] && CMD="$CMD -include-asset-in-test-name"
+
+# Add optional project/project-id
+[ -n "$PROJECT" ] && CMD="$CMD -project \"$PROJECT\""
+[ -n "$PROJECT_ID" ] && CMD="$CMD -project-id \"$PROJECT_ID\""
+
+echo "Executing: $CMD"
+
+# Execute the command
+# shellcheck disable=SC2086
+sh -c "$CMD"
+status=$?
+
+echo "return-code=$status" >> "$GITHUB_OUTPUT"
 exit "$status"
