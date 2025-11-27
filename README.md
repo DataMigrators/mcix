@@ -1,4 +1,4 @@
-# mcix - GitHub Actions for DevOps with DataStage NextGen
+# GitHub Actions for DataStage NextGen DevOps
 
 A container and GitHub Actions definitions for MCIX  for IBM Cloud Pak DataStage (http://mcix.mettleci.com)
 
