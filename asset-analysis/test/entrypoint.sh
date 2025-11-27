@@ -42,6 +42,10 @@ CMD="$MCIX_CMD asset-analysis test \
 [ -n "$PROJECT" ] && CMD="$CMD -project \"$PROJECT\""
 [ -n "$PROJECT_ID" ] && CMD="$CMD -project-id \"$PROJECT_ID\""
 
+# Echo diagnostics for included and excluded tags
+[ -n "$INCLUDETAGS" ] && CMD="$CMD -include-tag \"$INCLUDETAGS\""
+[ -n "$EXCLUDEDTAGS" ] && CMD="$CMD -exclude-tag \"$EXCLUDEDTAGS\""
+
 echo "Executing: $CMD"
 
 # Execute the command
