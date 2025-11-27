@@ -1,0 +1,14 @@
+# action.yml
+name: 'mcix unit-test generate action'
+author: 'Data Migrators Pty Ltd'
+description: 'Runs mcix unit-test generate'
+outputs:
+  return-code: # id of output
+    description: 'The console output of the command'
+runs:
+  using: 'docker'
+  image: 'Dockerfile' # Refers to the Dockerfile in the current directory
+
+branding:
+  icon: 'plus-circle'
+  color: 'blue'
