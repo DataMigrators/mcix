@@ -66,6 +66,7 @@ runs:
   env:
     PARAM_API_KEY: ${{ inputs.api-key }}
     PARAM_URL: ${{ inputs.url }}
+    PARAM_USER: ${{ inputs.user }}
     PARAM_REPORT: ${{ inputs.report }}
     PARAM_PROJECT: ${{ inputs.project }}
     PARAM_PROJECT_ID: ${{ inputs.project-id }}

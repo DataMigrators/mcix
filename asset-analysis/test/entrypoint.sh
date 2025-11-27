@@ -15,6 +15,12 @@ PATH="$PATH:$MCIX_BIN_DIR"
 PROJECT="${PARAM_PROJECT:-}"
 PROJECT_ID="${PARAM_PROJECT_ID:-}"
 
+# PARAM_RULES: ${{ inputs.rules }}
+# PARAM_INCLUDED_TAGS: ${{ inputs.included-tags }}
+# PARAM_EXCLUDED_TAGS: ${{ inputs.excluded-tags }}
+# PARAM_TEST_SUITE: ${{ inputs.test-suite }}
+# PARAM_IGNORE_TEST_FAILURES: ${{ inputs.ignore-test-failures }}
+
 # Failure handling utility function
 die() { echo "$*" 1>&2 ; exit 1; }
 
