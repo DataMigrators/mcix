@@ -10,8 +10,6 @@ PATH="$PATH:$MCIX_BIN_DIR"
 : "${PARAM_URL:?Missing required input: url}"
 : "${PARAM_USER:?Missing required input: user}"
 : "${PARAM_REPORT:?Missing required input: report}"
-: "${PARAM_RULES:?Missing required input: rules}"
-
 
 # Optional arguments
 PROJECT="${PARAM_PROJECT:-}"
@@ -31,7 +29,7 @@ if [ -z "$PROJECT" ] && [ -z "$PROJECT_ID" ]; then
 fi
 
 # Build command to execute
-CMD="$MCIX_CMD asset-analysis test \
+CMD="$MCIX_CMD unit-test execute \
  -api-key \"$PARAM_API_KEY\" \
  -url \"$PARAM_URL\" \
  -username \"$PARAM_USERNAME\" \
