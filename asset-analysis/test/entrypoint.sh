@@ -34,7 +34,8 @@ CMD="$MCIX_CMD asset-analysis test \
  -api-key \"$PARAM_API_KEY\" \
  -url \"$PARAM_URL\" \
  -username \"$PARAM_USERNAME\" \
- -report \"$PARAM_REPORT\""
+ -report \"$PARAM_REPORT\" \
+ -rules \"$PARAM_RULES\""
 
 # Add optional argument flags
 #[ -n "$PARAM_INCLUDE_ASSET_IN_TEST_NAME" ] && CMD="$CMD -include-asset-in-test-name"
