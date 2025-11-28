@@ -26,12 +26,6 @@ PATH="$PATH:$MCIX_BIN_DIR"
 # Failure handling utility functions
 die() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 
-write_return_code() {
-  rc=$?
-  echo "return-code=$rc" >>"$GITHUB_OUTPUT"
-}
-trap write_return_code EXIT
-
 # Validate mutually exclusive project/project-id arguments
 choose_project() {
   if [ -n "$PARAM_PROJECT" ] && [ -n "$PARAM_PROJECT_ID" ]; then
@@ -51,6 +45,48 @@ normalise_bool() {
     *) die "Invalid boolean: $1" ;;
   esac
 }
+
+# ---------------
+# Step summary
+# ---------------
+# Action-specific summary for this entrypoint
+write_step_summary() {
+  rc=$1
+
+  project_display="${PROJECT:-<none>}"
+  [ -n "${PROJECT_ID:-}" ] && project_display="${project_display} (ID: ${PROJECT_ID})"
+
+  include_flag="$(normalise_bool "${PARAM_INCLUDE_ASSET_IN_TEST_NAME:-0}")"
+  include_label="No"
+  [ "$include_flag" -eq 1 ] && include_label="Yes"
+
+  status_emoji="✅"
+  [ "$rc" -ne 0 ] && status_emoji="❌"
+
+  cat >>"$GITHUB_STEP_SUMMARY" <<EOF
+### ${status_emoji} MCIX DataStage Compile
+
+**Project:** ${project_display}  
+**Report:** \`${PARAM_REPORT}\`  
+
+**Include asset in test name:** ${include_label}  
+
+**Exit code:** \`$rc\`
+EOF
+}
+
+# Generic trap that always sets return-code and writes the step summary
+write_return_code_and_summary() {
+  rc=$?
+  echo "return-code=$rc" >>"$GITHUB_OUTPUT"
+
+  # Only write step summary if GitHub provides the file
+  [ -z "${GITHUB_STEP_SUMMARY:-}" ] && exit "$rc"
+
+  write_step_summary "$rc"
+  exit "$rc"
+}
+trap write_return_code_and_summary EXIT
 
 # -------------------
 # Validate parameters
