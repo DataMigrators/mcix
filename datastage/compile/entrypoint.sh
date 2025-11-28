@@ -59,7 +59,7 @@ normalise_bool() {
 write_step_summary() {
   rc=$1
 
-  status_emoji="🎉"
+  status_emoji="✅"
   status_title="Success"
   [ "$rc" -ne 0 ] && status_emoji="❌" && status_title="Failure"
 
@@ -73,19 +73,15 @@ write_step_summary() {
   cat >>"$GITHUB_STEP_SUMMARY" <<EOF
 ## ${status_emoji} MCIX DataStage Compile – ${status_title}
 
-### 📁 Project
-\`${project_display}\`
-
-### 📄 Report
-\`${PARAM_REPORT}\`
-
-### 🔧 Include Asset In Test Name
-\`${include_label}\`
-
-### 🚦 Exit Code
-\`${rc}\`
+| Property                    | Value                          |
+|----------------------------|---------------------------------|
+| **Project**                | \`${project_display}\`         |
+| **Report**                 | \`${PARAM_REPORT}\`            |
+| **Include Asset In Test Name** | \`${include_label}\`      |
+| **Exit Code**              | \`${rc}\`                      |
 EOF
 }
+
 
 # Generic trap that always sets return-code and writes the step summary
 write_return_code_and_summary() {
