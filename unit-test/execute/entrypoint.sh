@@ -42,10 +42,6 @@ CMD="$MCIX_CMD unit-test execute \
 # Add optional argument flags
 [ -n "$PARAM_MAX_CONCURRENCY" ] && CMD="$CMD -max-concurrency $PARAM_MAX_CONCURRENCY"
 
-# Parameter for included and excluded tags
-[ -n "$PARAM_INCLUDED_TAGS" ] && CMD="$CMD -include-tag \"$PARAM_INCLUDED_TAGS\""
-[ -n "$PARAM_EXCLUDED_TAGS" ] && CMD="$CMD -exclude-tag \"$PARAM_EXCLUDED_TAGS\""
-
 # Test suite name
 [ -n "$PARAM_TEST_SUITE" ] && CMD="$CMD -test-suite \"$PARAM_TEST_SUITE\""
 
