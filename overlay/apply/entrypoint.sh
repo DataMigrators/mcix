@@ -1,6 +1,9 @@
 #!/bin/sh -l
 set -eu
 
+# Failure handling utility function
+die() { echo "$*" 1>&2 ; exit 1; }
+
 MCIX_BIN_DIR="/usr/share/mcix/bin"
 MCIX_CMD="$MCIX_BIN_DIR/mcix"
 PATH="$PATH:$MCIX_BIN_DIR"

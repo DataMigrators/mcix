@@ -1,53 +1,98 @@
 #!/bin/sh -l
 set -eu
 
+# -----
+# Setup
+# -----
 MCIX_BIN_DIR="/usr/share/mcix/bin"
 MCIX_CMD="$MCIX_BIN_DIR/mcix"
 PATH="$PATH:$MCIX_BIN_DIR"
 
-# Validate required vars
-: "${PARAM_API_KEY:?Missing required input: api-key}"
-: "${PARAM_URL:?Missing required input: url}"
-: "${PARAM_USER:?Missing required input: user}"
-: "${PARAM_REPORT:?Missing required input: report}"
+: "${GITHUB_OUTPUT:?GITHUB_OUTPUT must be set}"
 
-# Optional arguments
-PROJECT="${PARAM_PROJECT:-}"
-PROJECT_ID="${PARAM_PROJECT_ID:-}"
+# -----------------
+# Utility functions
+# -----------------
 
-# Failure handling utility function
-die() { echo "$*" 1>&2 ; exit 1; }
+# Failure handling utility functions
+die() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 
-# 1) Fail if BOTH project and project-id were provided
-if [ -n "$PROJECT" ] && [ -n "$PROJECT_ID" ]; then
-  die "ERROR: Both 'project' and 'project-id' were provided. Please specify only one."
-fi
+write_return_code() {
+  rc=$?
+  echo "return-code=$rc" >>"$GITHUB_OUTPUT"
+}
+trap write_return_code EXIT
 
-# 2) Fail if NEITHER project or project-id were provided
-if [ -z "$PROJECT" ] && [ -z "$PROJECT_ID" ]; then
-  die "ERROR: You must provide either 'project' or 'project-id'." 
-fi
+# Validate mutually exclusive project/project-id arguments
+choose_project() {
+  if [ -n "$PARAM_PROJECT" ] && [ -n "$PARAM_PROJECT_ID" ]; then
+    die "Provide either 'project' or 'project-id', not both."
+  fi
 
+  if [ -z "$PARAM_PROJECT" ] && [ -z "$PARAM_PROJECT_ID" ]; then
+    die "You must provide either 'project' or 'project-id'."
+  fi
+}
+
+# Normalise "true/false", "1/0", etc.
+normalise_bool() {
+  case "$1" in
+    1|true|TRUE|yes|YES|on|ON) echo 1 ;;
+    0|false|FALSE|no|NO|off|OFF|"") echo 0 ;;
+    *) die "Invalid boolean: $1" ;;
+  esac
+}
+
+# -------------------
+# Validate parameters
+# -------------------
+
+# Required arguments
+require() {
+  # $1 = var name, $2 = human label (for error)
+  eval "v=\${$1-}"
+  if [ -z "$v" ]; then
+    die "Missing required input: $2"
+  fi
+}
+
+require PARAM_API_KEY "api-key"
+require PARAM_URL "url"
+require PARAM_USER "user"
+require PARAM_REPORT "report"
+
+# ------------------------
 # Build command to execute
-CMD="$MCIX_CMD datastage compile \
- -api-key \"$PARAM_API_KEY\" \
- -url \"$PARAM_URL\" \
- -user \"$PARAM_USER\" \
- -report \"$PARAM_REPORT\""
+# ------------------------
 
-# Add optional argument flags
-[ -n "$PARAM_INCLUDE_ASSET_IN_TEST_NAME" ] && CMD="$CMD -include-asset-in-test-name"
+# Start argv
+set -- "$MCIX_CMD" datastage compile
 
-# Add optional project/project-id
-[ -n "$PROJECT" ] && CMD="$CMD -project \"$PROJECT\""
-[ -n "$PROJECT_ID" ] && CMD="$CMD -project-id \"$PROJECT_ID\""
+# Core flags
+set -- "$@" -api-key "$PARAM_API_KEY"
+set -- "$@" -url "$PARAM_URL"
+set -- "$@" -user "$PARAM_USER"
+set -- "$@" -report "$PARAM_REPORT"
 
-echo "Executing: $CMD"
+# Mutually exclusive project / project-id handling
+choose_project
+[ -n "$PARAM_PROJECT" ]    && set -- "$@" -project "$PARAM_PROJECT"
+[ -n "$PARAM_PROJECT_ID" ] && set -- "$@" -project-id "$PARAM_PROJECT_ID"
 
-# Execute the command
-# shellcheck disable=SC2086
-sh -c "$CMD"
+# Optional scalar flags
+# None in this action
+
+# Optional boolean flags (with parameter variation handling)
+if [ "$(normalise_bool "${PARAM_INCLUDE_ASSET_IN_TEST_NAME:-0}")" -eq 1 ]; then
+  set -- "$@" -include-asset-in-test-name
+fi
+
+# -------
+# Execute
+# -------
+echo "Executing: $*"
+
+"$@"
+
 status=$?
-
-echo "return-code=$status" >> "$GITHUB_OUTPUT"
 exit "$status"
