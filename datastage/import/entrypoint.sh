@@ -56,24 +56,19 @@ write_step_summary() {
   project_display="${PROJECT:-<none>}"
   [ -n "${PROJECT_ID:-}" ] && project_display="${project_display} (ID: ${PROJECT_ID})"
 
-  include_flag="$(normalise_bool "${PARAM_INCLUDE_ASSET_IN_TEST_NAME:-0}")"
-  include_label="No"
-  [ "$include_flag" -eq 1 ] && include_label="Yes"
-
   status_emoji="✅"
   [ "$rc" -ne 0 ] && status_emoji="❌"
 
   cat >>"$GITHUB_STEP_SUMMARY" <<EOF
-### ${status_emoji} MCIX DataStage Compile
+### ${status_emoji} MCIX DataStage Import
 
 **Project:** ${project_display}  
-**Report:** \`${PARAM_REPORT}\`  
-
-**Include asset in test name:** ${include_label}  
+**Assets:** \`${PARAM_ASSETS:-<none>}\`  
 
 **Exit code:** \`$rc\`
 EOF
 }
+
 
 # Generic trap that always sets return-code and writes the step summary
 write_return_code_and_summary() {
