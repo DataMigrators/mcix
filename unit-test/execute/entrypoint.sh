@@ -32,7 +32,7 @@ fi
 CMD="$MCIX_CMD unit-test execute \
  -api-key \"$PARAM_API_KEY\" \
  -url \"$PARAM_URL\" \
- -username \"$PARAM_USERNAME\" \
+ -user \"$PARAM_USER\" \
  -report \"$PARAM_REPORT\" \
  -rules \"$PARAM_RULES\""
 
