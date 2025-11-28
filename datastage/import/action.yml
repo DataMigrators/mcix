@@ -2,6 +2,10 @@
 name: 'MCIX datastage import action'
 author: 'Data Migrators Pty Ltd'
 description: 'Runs mcix datastage import'
+branding:
+  icon: 'log-in'
+  color: 'blue'
+
 inputs:
 
   api-key:
@@ -45,7 +49,3 @@ runs:
     PARAM_ASSETS: ${{ inputs.assets }}
     PARAM_PROJECT: ${{ inputs.project }}
     PARAM_PROJECT_ID: ${{ inputs.project-id }}
-
-branding:
-  icon: 'log-in'
-  color: 'blue'
