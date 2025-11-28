@@ -61,4 +61,3 @@ status=$?
 
 echo "return-code=$status" >> "$GITHUB_OUTPUT"
 exit "$status"
-
