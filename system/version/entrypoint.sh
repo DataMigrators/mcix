@@ -40,7 +40,7 @@ write_step_summary() {
 
   {
     cat <<EOF
-## ${status_emoji} MCIX DataStage Import – ${status_title}
+### ${status_emoji} MCIX System Version – ${status_title}
 
 | Property    | Value                          |
 |------------|---------------------------------|
@@ -68,23 +68,38 @@ EOF
       echo '| ------ | ------- |'
 
       printf '%s\n' "$CMD_OUTPUT" | awk '
-        /^Loaded plugins:/ { in_plugins = 1; next }
-        in_plugins && /^\s*\*/ {
+        BEGIN { in_plugins = 0 }
+
+        /^Loaded plugins:/ {
+          in_plugins = 1
+          next
+        }
+
+        # Optional: stop once we hit a blank line after the plugins list
+        in_plugins && NF == 0 {
+          exit
+        }
+
+        in_plugins && /^[[:space:]]*\*/ {
           line = $0
-          sub(/^\s*\*\s*/, "", line)
+
+          # strip leading " * " (with any whitespace around)
+          sub(/^[[:space:]]*\*[[:space:]]*/, "", line)
 
           plugin = line
           version = ""
 
+          # If there is a (...) at the end, treat that as the version
           if (match(plugin, /\(([^()]*)\)[[:space:]]*$/)) {
             version = substr(plugin, RSTART + 1, RLENGTH - 2)
             plugin  = substr(plugin, 1, RSTART - 1)
-            sub(/[[:space:]]*$/, "", plugin)
+            sub(/[[:space:]]*$/, "", plugin)  # trim trailing spaces
           }
 
           printf("| %s | %s |\n", plugin, version)
         }
       '
+
 
       echo
       echo '</details>'
