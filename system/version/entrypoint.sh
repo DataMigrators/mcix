@@ -10,7 +10,7 @@
 
 set -eu
 
-# -----
+# ----- 
 # Setup
 # -----
 MCIX_BIN_DIR="/usr/share/mcix/bin"
