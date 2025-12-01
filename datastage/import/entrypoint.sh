@@ -19,6 +19,9 @@ PATH="$PATH:$MCIX_BIN_DIR"
 
 : "${GITHUB_OUTPUT:?GITHUB_OUTPUT must be set}"
 
+# We'll store the real command status here so the trap can see it
+MCIX_STATUS=0
+
 # -----------------
 # Utility functions
 # -----------------
@@ -45,45 +48,6 @@ normalise_bool() {
     *) die "Invalid boolean: $1" ;;
   esac
 }
-
-# ---------------
-# Step summary
-# ---------------
-# Action-specific summary for this entrypoint
-write_step_summary() {
-  rc=$1
-
-  status_emoji="✅"
-  status_title="Success"
-  [ "$rc" -ne 0 ] && status_emoji="❌" && status_title="Failure"
-
-  project_display="${PROJECT:-<none>}"
-  [ -n "${PROJECT_ID:-}" ] && project_display="${project_display} (ID: ${PROJECT_ID})"
-
-  cat >>"$GITHUB_STEP_SUMMARY" <<EOF
-## ${status_emoji} MCIX DataStage Import – ${status_title}
-
-| Property   | Value                          |
-|-----------|---------------------------------|
-| **Project** | \`${project_display}\`        |
-| **Assets**  | \`${PARAM_ASSETS:-<none>}\`   |
-| **Exit Code** | \`${rc}\`                  |
-EOF
-}
-
-
-# Generic trap that always sets return-code and writes the step summary
-write_return_code_and_summary() {
-  rc=$?
-  echo "return-code=$rc" >>"$GITHUB_OUTPUT"
-
-  # Only write step summary if GitHub provides the file
-  [ -z "${GITHUB_STEP_SUMMARY:-}" ] && exit "$rc"
-
-  write_step_summary "$rc"
-  exit "$rc"
-}
-trap write_return_code_and_summary EXIT
 
 # -------------------
 # Validate parameters
@@ -131,12 +95,134 @@ if [ "$(normalise_bool "${PARAM_INCLUDE_JOB_IN_TEST_NAME:-0}")" -eq 1 ]; then
   set -- "$@" -include-job-in-test-name
 fi
 
+# ------------
+# Step summary
+# ------------
+write_step_summary() {
+  rc=$1
+
+  status_emoji="✅"
+  status_title="Success"
+  [ "$rc" -ne 0 ] && status_emoji="❌" && status_title="Failure"
+
+  project_display="${PROJECT:-<none>}"
+  [ -n "${PROJECT_ID:-}" ] && project_display="${project_display} (ID: ${PROJECT_ID})"
+
+  {
+    cat <<EOF
+### ${status_emoji} MCIX System Version – ${status_title}
+
+| Property    | Value                          |
+|------------|---------------------------------|
+| **Project**  | \`${project_display}\`        |
+| **Assets**   | \`${PARAM_ASSETS:-<none>}\`   |
+| **Exit Code** | \`${rc}\`                    |
+EOF
+
+    if [ -n "${CMD_OUTPUT:-}" ]; then
+      printf '\n### MettleCI Command Output\n\n'
+
+      echo '```text'
+      printf '%s\n' "$CMD_OUTPUT" | awk '
+        /^Loaded plugins:/ { in_plugins = 1; next }
+        in_plugins && /^\s*\*/ { next }  # skip plugin lines
+        { print }
+      '
+      echo '```'
+      echo
+
+      echo '<details>'
+      echo '<summary>Loaded plugins</summary>'
+      echo
+      echo '| Asset | Type | Status |' >>"$GITHUB_STEP_SUMMARY"
+      echo '|-------|------|--------|' >>"$GITHUB_STEP_SUMMARY"
+
+      printf '%s\n' "$CMD_OUTPUT" | awk '
+        BEGIN {
+          in_assets = 0
+        }
+
+        # Turn on parsing after "Deploying project containing ..."
+        /^Deploying project containing/ {
+          in_assets = 1
+          next
+        }
+
+        # Stop once we hit "Import report(s):"
+        in_assets && /^Import report\(s\):/ {
+          exit
+        }
+
+        # Only process bullet lines that start with "*" (ignore warnings, blanks, etc.)
+        in_assets && /^[[:space:]]*\*/ {
+          line = $0
+
+          # Strip leading " * Import " (with flexible whitespace)
+          sub(/^[[:space:]]*\*[[:space:]]*Import[[:space:]]+/, "", line)
+
+          # Now line looks like:
+          #   UpdFactSales (orchestration_flow) - SUCCESS
+
+          asset_type = line
+          status = ""
+
+          # Extract status after " - STATUS" at the end
+          if (match(asset_type, /[[:space:]]-[[:space:]]([A-Z_]+)$/)) {
+            status = substr(asset_type, RSTART + 3, RLENGTH - 3)  # skip " - "
+            asset_type = substr(asset_type, 1, RSTART - 1)
+            sub(/[[:space:]]*$/, "", asset_type)
+          }
+
+          # asset_type should now look like:
+          #   UpdFactSales (orchestration_flow)
+
+          asset = asset_type
+          type  = ""
+
+          # Extract type from trailing "(...)" if present
+          if (match(asset_type, /[[:space:]]*\(([^()]*)\)[[:space:]]*$/)) {
+            type  = substr(asset_type, RSTART + 1, RLENGTH - 2)
+            asset = substr(asset_type, 1, RSTART - 1)
+            sub(/[[:space:]]*$/, "", asset)  # trim trailing spaces
+          }
+
+          printf("| %s | %s | %s |\n", asset, type, status)
+        }'
+
+      echo
+      echo '</details>'
+    fi
+  } >>"$GITHUB_STEP_SUMMARY"
+}
+
+# ---------
+# Exit trap
+# ---------
+write_return_code_and_summary() {
+  # Prefer MCIX_STATUS if set; fall back to $?
+  rc=${MCIX_STATUS:-$?}
+
+  echo "return-code=$rc" >>"$GITHUB_OUTPUT"
+
+  [ -z "${GITHUB_STEP_SUMMARY:-}" ] && return
+
+  write_step_summary "$rc"
+}
+trap write_return_code_and_summary EXIT
+
 # -------
 # Execute
 # -------
 echo "Executing: $*"
 
-"$@"
+# Run the command, capture its output and status, but don't let `set -e` kill us.
+set +e
+CMD_OUTPUT="$("$@" 2>&1)"
+MCIX_STATUS=$?
+set -e
 
-status=$?
-exit "$status"
+# Echo original command output into the job logs
+printf '%s\n' "$CMD_OUTPUT"
+
+# Let the trap handle outputs & summary using MCIX_STATUS
+exit "$MCIX_STATUS"
