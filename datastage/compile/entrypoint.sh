@@ -113,14 +113,13 @@ write_step_summary() {
 
   {
     cat <<EOF
-### ${status_emoji} MCIX DataStage Import – ${status_title}
+### ${status_emoji} MCIX DataStage Compile – ${status_title}
 
 | Property                    | Value                          |
 |----------------------------|---------------------------------|
 | **Project**                | \`${project_display}\`          |
 | **Report**                 | \`${PARAM_REPORT}\`             |
 | **Include Asset In Test Name** | \`${include_label}\`        |
-| **Exit Code**              | \`${rc}\`                       |
 EOF
 
     if [ -n "${CMD_OUTPUT:-}" ]; then
@@ -131,7 +130,7 @@ EOF
       #echo
 
       echo '<details>'
-      echo '<summary>Imported assets</summary>'
+      echo '<summary>Compiled assets</summary>'
       echo
       echo '| Asset | Type | Status |' >>"$GITHUB_STEP_SUMMARY"
       echo '|-------|------|--------|' >>"$GITHUB_STEP_SUMMARY"
@@ -139,7 +138,7 @@ EOF
       printf '%s\n' "$CMD_OUTPUT" | awk '
         BEGIN { in_assets = 0 }
 
-        /^Deploying project containing/ {
+        /^Compiling/ {
           in_assets = 1
           next
         }
