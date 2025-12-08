@@ -174,7 +174,7 @@ EOF
             # Trim whitespace
             sub(/[[:space:]]*$/, "", asset)
 
-            # 🔥 NEW FIX: Remove any leading "(" from type
+            # Remove any leading "(" from type
             sub(/^[[:space:]]*\(/, "", type)
 
             # Trim whitespace again
