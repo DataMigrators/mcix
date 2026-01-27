@@ -59,11 +59,11 @@ fi
 
 [ -n "$PARAM_TEST_SUITE" ] && CMD="$CMD -test-suite \"$PARAM_TEST_SUITE\""
 
-if [ -n "$PARAM_IGNORE_TEST_FAILURES" ] && [ "$(normalise_bool "${PARAM_IGNORE_TEST_FAILURES:-0}")" == "1" ]; then 
+if [ -n "$PARAM_IGNORE_TEST_FAILURES" ] && [ "$(normalise_bool "${PARAM_IGNORE_TEST_FAILURES:-0}")" = "1" ]; then 
   CMD="$CMD -ignore-test-failures"
 fi
 
-if [ -n "$PARAM_INCLUDE_ASSET_IN_TEST_NAME" ] && [ "$(normalise_bool "${PARAM_INCLUDE_ASSET_IN_TEST_NAME:-0}")" == "1" ]; then
+if [ -n "$PARAM_INCLUDE_ASSET_IN_TEST_NAME" ] && [ "$(normalise_bool "${PARAM_INCLUDE_ASSET_IN_TEST_NAME:-0}")" = "1" ]; then
   CMD="$CMD -include-asset-in-test-name"
 fi
 
