@@ -49,6 +49,21 @@ normalise_bool() {
   esac
 }
 
+# Ensure report file lands in the GitHub workspace so it survives container exit
+resolve_report_path() {
+  p="$1"
+
+  # If already absolute, keep it
+  case "$p" in
+    /*) echo "$p" ;;
+    *)
+      # If relative, anchor it under workspace
+      base="${GITHUB_WORKSPACE:-/github/workspace}"
+      echo "${base}/${p#./}"
+      ;;
+  esac
+}
+
 # -------------------
 # Validate parameters
 # -------------------
@@ -66,6 +81,12 @@ require PARAM_API_KEY "api-key"
 require PARAM_URL "url"
 require PARAM_USER "user"
 require PARAM_REPORT "report"
+
+# Ensure PARAM_REPORT will always be /github/workspace/...
+# so it survives container exit and is publishable as an artifact.
+PARAM_REPORT="$(resolve_report_path "$PARAM_REPORT")"
+mkdir -p "$(dirname "$PARAM_REPORT")"
+report_display="${PARAM_REPORT#${GITHUB_WORKSPACE:-/github/workspace}/}"
 
 # ------------------------
 # Build command to execute
