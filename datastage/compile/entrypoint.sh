@@ -127,6 +127,7 @@ write_step_summary() {
   rc=$1
 
   if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+    ls -l "$MCIX_BIN_DIR"
     "$MCIX_JUNIT_CMD" "$PARAM_REPORT" "MCIX DataStage Compile"
   fi
 }
