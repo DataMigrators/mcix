@@ -15,6 +15,7 @@ set -eu
 # -----
 MCIX_BIN_DIR="/usr/share/mcix/bin"
 MCIX_CMD="$MCIX_BIN_DIR/mcix"
+MCIX_JUNIT_CMD="$MCIX_BIN_DIR/mcix-junit-to-summary"
 PATH="$PATH:$MCIX_BIN_DIR"
 
 : "${GITHUB_OUTPUT:?GITHUB_OUTPUT must be set}"
@@ -126,7 +127,7 @@ write_step_summary() {
   rc=$1
 
   if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
-    mcix-junit-to-summary "$PARAM_REPORT" "MCIX DataStage Compile"
+    "$MCIX_JUNIT_CMD" "$PARAM_REPORT" "MCIX DataStage Compile"
   fi
 }
 
@@ -150,6 +151,11 @@ trap write_return_code_and_summary EXIT
 # Execute
 # -------
 echo "Executing: $*"
+
+# Check the repository has been checked out
+if [ ! -e "/github/workspace/.git" ] && [ ! -e "/github/workspace/$PARAM_ASSETS" ]; then
+  die "Repo contents not found in /github/workspace. Did you forget to run actions/checkout@v4 before this action?"
+fi
 
 # Run the command, capture its output and status, but don't let `set -e` kill us.
 set +e
