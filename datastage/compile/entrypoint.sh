@@ -14,7 +14,7 @@ set -eu
 # Setup
 # -----
 MCIX_BIN_DIR="/usr/share/mcix/bin"
-MCIX_CMD="$MCIX_BIN_DIR/mcix"
+MCIX_CMD="$MCIX_BIN_DIR/mcix" 
 MCIX_JUNIT_CMD="$MCIX_BIN_DIR/mcix-junit-to-summary"
 PATH="$PATH:$MCIX_BIN_DIR"
 
