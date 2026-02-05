@@ -1,4 +1,6 @@
 #!/bin/sh
+# Don't use -l here; we want to preserve the PATH and other env vars 
+# as set in the base image, and not have it overridden by a login shell
 
 # ███╗   ███╗███████╗████████╗████████╗██╗     ███████╗ ██████╗██╗
 # ████╗ ████║██╔════╝╚══██╔══╝╚══██╔══╝██║     ██╔════╝██╔════╝██║
@@ -16,7 +18,7 @@ set -eu
 export MCIX_BIN_DIR="/usr/share/mcix/bin"
 export MCIX_CMD="mcix" 
 export MCIX_JUNIT_CMD="mcix-junit-to-summary"
-# Make us immune to login shells, runner differences, or potential base-image changes
+# Make us immune to runner differences or potential base-image changes
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$MCIX_BIN_DIR"
 
 : "${GITHUB_OUTPUT:?GITHUB_OUTPUT must be set}"
