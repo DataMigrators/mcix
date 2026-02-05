@@ -1,4 +1,4 @@
-#!/bin/sh -l
+#!/bin/sh
 
 # ███╗   ███╗███████╗████████╗████████╗██╗     ███████╗ ██████╗██╗
 # ████╗ ████║██╔════╝╚══██╔══╝╚══██╔══╝██║     ██╔════╝██╔════╝██║
@@ -13,10 +13,11 @@ set -eu
 # -----
 # Setup
 # -----
-MCIX_BIN_DIR="/usr/share/mcix/bin"
-MCIX_CMD="$MCIX_BIN_DIR/mcix" 
-MCIX_JUNIT_CMD="$MCIX_BIN_DIR/mcix-junit-to-summary"
-PATH="$PATH:$MCIX_BIN_DIR"
+export MCIX_BIN_DIR="/usr/share/mcix/bin"
+export MCIX_CMD="mcix" 
+export MCIX_JUNIT_CMD="mcix-junit-to-summary"
+# Make us immune to login shells, runner differences, or potential base-image changes
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$MCIX_BIN_DIR"
 
 : "${GITHUB_OUTPUT:?GITHUB_OUTPUT must be set}"
 
